@@ -1,0 +1,143 @@
+<title>Podcast making workflow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@500;700&family=Instrument+Serif:ital@1&display=swap">
+<style>
+/* Layout: a pipeline page. Header, the wide lane diagram, then stage contracts, approved values and the hand-off protocol. */
+:root {
+  --bg: #F3F1EA; --surface: #FFFEFA; --fg: #0E0E10; --muted: #5C5B63; --line: #D9D5C9;
+  --volt: #D4FF3A; --on-volt: #0E0E10; --signal: #C2410C; --band: #EAE7DD;
+  --display: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --body: "Inter", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --serif: "Instrument Serif", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E0E10; --surface: #18181C; --fg: #F2EFE6; --muted: #A3A2AB; --line: #2E2E35;
+  --volt: #D4FF3A; --on-volt: #0E0E10; --signal: #FF7A52; --band: #141417; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0E0E10; --surface: #18181C; --fg: #F2EFE6; --muted: #A3A2AB; --line: #2E2E35;
+  --volt: #D4FF3A; --on-volt: #0E0E10; --signal: #FF7A52; --band: #141417; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 32px 0 }
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 56px }
+.logo-dark { display: none }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .logo-light { display: none } :root:not([data-theme="light"]) .logo-dark { display: block } }
+:root[data-theme="dark"] .logo-light { display: none } :root[data-theme="dark"] .logo-dark { display: block }
+header.top { display: flex; flex-direction: column; gap: 18px }
+header.top img { width: 180px; height: auto }
+h1 { font-family: var(--display); font-weight: 900; font-size: clamp(36px, 6vw, 64px); line-height: 1; letter-spacing: -0.03em; margin: 0; text-wrap: balance }
+h1 em { font-family: var(--serif); font-weight: 400; font-style: italic; letter-spacing: 0 }
+.lead { max-width: 68ch; font-size: 17px; color: var(--muted); margin: 0 }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0 }
+.chips li { font-family: var(--mono); font-size: 12px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface) }
+.chips li.v { background: var(--volt); color: var(--on-volt); border-color: var(--volt); font-weight: 700 }
+section { display: flex; flex-direction: column; gap: 20px }
+h2 { font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: -0.02em; margin: 0 }
+.sub { color: var(--muted); margin: 0; max-width: 70ch }
+.diagram { overflow-x: auto; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 12px }
+.diagram svg { display: block; width: 100%; min-width: 1150px; height: auto }
+svg text { font-family: var(--body) }
+.lane { font-family: var(--mono); font-size: 13px; font-weight: 700; fill: var(--muted); letter-spacing: 0.06em }
+.laneline { stroke: var(--line); stroke-width: 1.5 }
+.box { fill: var(--bg); stroke: var(--line); stroke-width: 1.5 }
+.chip { fill: var(--volt) }
+.chipt { font-family: var(--mono); font-size: 12px; font-weight: 700; fill: var(--on-volt) }
+.tt { font-size: 15px; font-weight: 800; fill: var(--fg) }
+.tools { font-size: 12.5px; fill: var(--muted) }
+.out { font-family: var(--mono); font-size: 11.5px; fill: var(--fg) }
+.out.strong { font-weight: 700; font-size: 12.5px }
+.gate { fill: none; stroke: var(--volt); stroke-width: 3 }
+.ar { fill: none; stroke: var(--muted); stroke-width: 1.6 }
+.ahp { fill: var(--muted) }
+.lbl { font-family: var(--mono); font-size: 11px; fill: var(--signal) }
+.folder { fill: var(--bg); stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 5 4 }
+.row { fill: var(--surface); stroke: var(--line) }
+.rt { font-size: 12.5px; font-weight: 700; fill: var(--fg) }
+.rs { font-family: var(--mono); font-size: 10.5px; fill: var(--muted) }
+.band { fill: var(--band); stroke: var(--line) }
+.legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 13px; color: var(--muted) }
+.legend span { display: inline-flex; align-items: center; gap: 8px }
+.sw { width: 14px; height: 14px; border-radius: 50%; border: 3px solid var(--volt); display: inline-block }
+.sw.l { border: none; border-radius: 0; width: 22px; height: 2px; background: var(--muted) }
+.sw.t { border: none; border-radius: 0; width: auto; height: auto; font-family: var(--mono); font-size: 11px; color: var(--signal) }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0 }
+.card header { display: flex; align-items: center; gap: 10px }
+.num { font-family: var(--mono); font-weight: 700; font-size: 12px; background: var(--volt); color: var(--on-volt); border-radius: 6px; padding: 2px 8px }
+.card h3 { margin: 0; font-size: 16px; font-weight: 800 }
+.card dl { margin: 0; display: grid; grid-template-columns: 52px 1fr; gap: 6px 10px; font-size: 13.5px }
+.card dt { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px; letter-spacing: 0.04em }
+.card dd { margin: 0; min-width: 0 }
+.values { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 0 32px; margin: 0 }
+.kv { display: grid; grid-template-columns: 170px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); min-width: 0 }
+.kv dt { font-weight: 700; font-size: 14px }
+.kv dd { margin: 0; color: var(--muted); font-size: 14px; min-width: 0 }
+ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px }
+ol.steps li { counter-increment: s; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; font-size: 14px }
+ol.steps li::before { content: counter(s); display: block; font-family: var(--mono); font-weight: 700; color: var(--muted); margin-bottom: 6px }
+code { font-family: var(--mono); font-size: 0.86em; background: var(--band); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere }
+ul.gaps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; max-width: 80ch }
+footer { border-top: 1px solid var(--line); padding-block: 22px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px }
+footer img { width: 120px; height: auto }
+@media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 4px } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <img class="logo-light" src="data:image/png;base64,%%INK%%" alt="What I Built">
+    <img class="logo-dark" src="data:image/png;base64,%%PAPER%%" alt="What I Built">
+    <h1>Podcast making <em>workflow</em></h1>
+    <p class="lead">Every step from preparing an episode to finished YouTube and Instagram files, ready to post. Each stage is one <code>wib</code> command driven by the episode's <code>episode.json</code>, leaves its work on disk and has a quality gate, so Claude or Codex can pick up any stage and reach the same quality as Episode 01. Works for solo episodes and for a guest in the same room.</p>
+    <ul class="chips">
+      <li class="v">12 stages</li><li>Free tools only</li><li>Runs on the MacBook Air</li><li>Claude or Codex can resume any stage</li><li>Solo or same-room guest</li><li>Posting and promotion not covered yet</li>
+    </ul>
+  </header>
+
+  <section aria-labelledby="h-arch">
+    <h2 id="h-arch">Architecture</h2>
+    <p class="sub">Stages run left to right and top to bottom. Each box shows its command and outputs. Orange labels name the files passed between stages. Output2 and the reels reuse Output1's edit and never change its audio.</p>
+    <div class="diagram">%%SVG%%</div>
+    <div class="legend"><span><i class="sw"></i>Quality gate at the end of the stage</span><span><i class="sw l"></i>Feeds the next stage</span><span><i class="sw t">cut list</i>File handed over</span></div>
+  </section>
+
+  <section aria-labelledby="h-st">
+    <h2 id="h-st">Stage contracts</h2>
+    <p class="sub">The short form of WORKFLOW.md. A stage counts as done only when its gate passes.</p>
+    <div class="grid">%%CARDS%%</div>
+  </section>
+
+  <section aria-labelledby="h-val">
+    <h2 id="h-val">Approved values</h2>
+    <p class="sub">Settings Ayan signed off on during Episode 01. Change them only through the decision log.</p>
+    <dl class="values">%%VALUES%%</dl>
+  </section>
+
+  <section aria-labelledby="h-ho">
+    <h2 id="h-ho">Hand-off between Claude and Codex</h2>
+    <ol class="steps">
+      <li>Read the newest lines of <code>~/Projects/wib-hq/HANDOFF-LOG.md</code>. Stop if another agent has the same files open.</li>
+      <li>Log a STARTED line, then check the stage's inputs exist. A missing input means the previous stage isn't done.</li>
+      <li>Do the steps. Test-render a short slice, check it, then do one full render.</li>
+      <li>Run the gate. Log DONE with duration, loudness and paths, or PAUSED with what's left.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="h-gap">
+    <h2 id="h-gap">Before the Episode 02 shoot</h2>
+    <ul class="gaps">
+      <li>Fill in <code>episode.json</code> (Yash's name, role and colour, chapter guesses, sting words) with <code>uv run wib new wib-002 --number 02</code>.</li>
+      <li>Pick a sting track and a music bed from the YouTube Audio Library and put them in <code>episodes/wib-002/music/</code>.</li>
+      <li>Give Yash his own mic: earbuds or a lav into his phone's voice recorder.</li>
+      <li>Shoot a 60 s test take with a clap, then run <code>wib ingest</code>, <code>wib review</code> and <code>wib frame</code> to set the framing.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <img class="logo-light" src="data:image/png;base64,%%INK%%" alt="What I Built">
+    <img class="logo-dark" src="data:image/png;base64,%%PAPER%%" alt="What I Built">
+    <span>A Podcast for AI Builders</span>
+    <span>Version 1, 28 October 2026</span>
+  </footer>
+</div>

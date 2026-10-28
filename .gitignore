@@ -1,0 +1,27 @@
+# Media never goes in git
+*.mp4
+*.mov
+*.mkv
+*.m4v
+*.wav
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.jpg
+*.png
+!brand/**/*.png
+*.otio
+*.fcpxml
+*.drp
+# Episode data stays on the Mac (transcripts and privacy boxes can hold personal details)
+episodes/*
+!episodes/_template/
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+.DS_Store
+!docs/architecture.png

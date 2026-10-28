@@ -1,0 +1,29 @@
+{
+ "id": "wib-003",
+ "number": "03",
+ "title": "Episode title",
+ "format": "solo",
+ "people": {"host": {"name": "Ayan", "role": "Host", "colour": "volt"}},
+ "takes": [
+  {"id": "intro", "screen": "intro-screen.mp4"},
+  {"id": "a1", "screen": "a1-screen.mp4"}
+ ],
+ "bubble": {"x": 56, "y": 1104, "size": 440, "face": [91, 1112, 370]},
+ "names": {},
+ "sections": [
+  {"id": "intro", "title": "Intro"},
+  {"id": "a1", "title": "Leadership reporting agent",
+   "card": {"tag": "Agent 01", "line": "Saves 10 to 15 hours of status reports a week", "mascot": "nova", "colour": "#9B6BFF"}}
+ ],
+ "sting": {
+  "words": ["5", "AGENTS", "I", "USE", "DAILY"],
+  "subtitle": "Episode title",
+  "cast": [{"mascot": "nova", "label": "NOVA", "colour": "#9B6BFF"}],
+  "faces": [{"take": "intro", "at": 20.0}],
+  "music": "music/sting.mp3"
+ },
+ "music_bed": "music/bed.mp3",
+ "covers": [],
+ "thumbnail": {"lines": ["Headline line one", {"text": "highlighted", "hl": true}, "line three"],
+               "sub": ["One sub line"], "faces": [{"take": "intro", "at": 20.0}], "mascots": ["nova"]}
+}

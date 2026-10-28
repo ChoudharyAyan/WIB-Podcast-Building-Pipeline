@@ -1,0 +1,16 @@
+# One term per line. Fed to Whisper as a spelling hint; add your agent and tool names here.
+What I Built
+WIB
+Claude
+Claude Code
+Codex
+n8n
+MCP
+OpenAI
+Anthropic
+Slack
+Notion
+Zapier
+LLM
+API
+Ayan Choudhary

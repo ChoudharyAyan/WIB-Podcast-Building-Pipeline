@@ -1,0 +1,45 @@
+{
+ "id": "wib-002",
+ "number": "02",
+ "title": "How to be a better vibe coder",
+ "format": "conversation",
+ "people": {
+  "host": {"name": "Ayan", "role": "Host", "colour": "volt"},
+  "yash": {"name": "Yash", "role": "System Architect", "colour": "signal"}
+ },
+ "takes": [
+  {"id": "t1", "screen": "t1-screen.mp4", "camera": "t1-camera.mp4",
+   "mics": {"host": "t1-screen.mp4", "yash": "t1-yash.m4a"}}
+ ],
+ "framing": {
+  "face": {"host": [1100, 820, 760], "yash": [2740, 820, 760]},
+  "close": {"host": [160, 200, 1920, 1080], "yash": [1760, 200, 1920, 1080]}
+ },
+ "names": {"Yesh": "Yash", "Claude Code": "Claude Code"},
+ "glossary": ["vibe coding", "Cursor", "Claude Code", "Codex"],
+ "sections": [
+  {"id": "intro", "title": "Intro"},
+  {"id": "ch1", "title": "What vibe coding is", "card": {"tag": "Chapter 01", "line": "A line Yash or Ayan actually says"}},
+  {"id": "ch2", "title": "Where it breaks", "card": {"tag": "Chapter 02", "line": "A line Yash or Ayan actually says"}}
+ ],
+ "sting": {
+  "words": ["A", "PODCAST", "FOR", "AI", "BUILDERS"],
+  "subtitle": "How to be a better vibe coder, with Yash",
+  "cast_title": "IN THIS EPISODE",
+  "cast": [{"person": "host", "take": "t1", "at": 60.0}, {"person": "yash", "take": "t1", "at": 75.0}],
+  "faces": [{"person": "host", "take": "t1", "at": 120.0}, {"person": "yash", "take": "t1", "at": 140.0}],
+  "music": "music/sting.mp3"
+ },
+ "music_bed": "music/bed.mp3",
+ "covers": [
+  {"out": "Cover-Reel-1.jpg", "bg": "signal", "ring": "volt", "title": ["Two-line hook", "from the reel"],
+   "sub": "What I Built podcast, episode 02", "faces": [{"person": "yash", "take": "t1", "at": 140.0}]}
+ ],
+ "thumbnail": {
+  "lines": ["How to be a", {"text": "better vibe coder", "hl": true}],
+  "sub": ["A system architect on", "shipping real software with AI"],
+  "faces": [{"person": "host", "take": "t1", "at": 120.0}, {"person": "yash", "take": "t1", "at": 140.0}]
+ },
+ "youtube": {"title": "How to be a better vibe coder (with a system architect) | What I Built Ep 02",
+             "description": "Two or three sentences on what the episode covers.", "links": []}
+}

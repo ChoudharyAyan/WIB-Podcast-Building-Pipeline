@@ -1,0 +1,38 @@
+{
+  "name": "What I Built",
+  "short": "WIB",
+  "colors": {
+    "ink": "#0E0E10",
+    "paper": "#F2EFE6",
+    "volt": "#D4FF3A",
+    "signal": "#FF5B2E"
+  },
+  "fonts": {
+    "display": "Inter Black",
+    "serif": "Instrument Serif Italic",
+    "mono": "JetBrains Mono"
+  },
+  "captions": {
+    "long_form": {
+      "max_chars_per_line": 42,
+      "max_lines": 2,
+      "max_cue_seconds": 6.0
+    },
+    "shorts": {
+      "font": "Inter Black",
+      "size": 92,
+      "words_per_chunk": 3,
+      "uppercase": true,
+      "text_color": "paper",
+      "highlight_color": "volt",
+      "outline_color": "ink",
+      "outline": 6,
+      "margin_bottom": 520
+    }
+  },
+  "ticket": {
+    "id_prefix": "WIB-",
+    "status_in_episode": "IN DEMO",
+    "status_on_posts": "SHIPPED"
+  }
+}

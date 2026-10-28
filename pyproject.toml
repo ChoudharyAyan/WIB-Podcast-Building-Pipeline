@@ -1,0 +1,33 @@
+[project]
+name = "wib-pipeline"
+version = "1.0.0"
+description = "Post-production pipeline for the What I Built (WIB) podcast"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "opentimelineio>=0.17",
+    "pillow>=10.3",
+]
+
+[project.optional-dependencies]
+# Apple Silicon transcription (install on the Mac): uv sync --extra mac
+mac = [
+    "mlx-whisper>=0.4",
+]
+# Portable fallback transcription (any OS, CPU): uv sync --extra cpu
+cpu = [
+    "faster-whisper>=1.0",
+]
+
+[project.scripts]
+wib = "wib.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["wib"]

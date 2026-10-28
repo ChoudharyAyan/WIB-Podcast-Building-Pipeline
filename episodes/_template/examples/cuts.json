@@ -1,0 +1,10 @@
+{
+ "takes": {
+  "t1": {"start": 12.4, "end": null, "tail": 0.7, "section": "intro",
+         "remove": [[301.2, 318.9, "Yash restarts the answer, keep the second try"],
+                    [902.0, 911.5, "phone buzz and laugh, no content"]]}
+ },
+ "chapters": [{"take": "t1", "at": 245.0, "section": "ch1"}, {"take": "t1", "at": 1210.0, "section": "ch2"}],
+ "tighten": {"max_pause": 1.2, "keep": 0.5},
+ "layouts": [{"take": "t1", "from": 1400.0, "to": 1520.0, "layout": "screen"}]
+}

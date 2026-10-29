@@ -40,7 +40,7 @@ def sync_take(ep: Episode, take: str) -> dict:
     for role in ("screen", "camera"):
         if ep.file(take, role):
             files.add(ep.file(take, role))
-    files |= {ep.raw / m for m in t["mics"].values()}
+    files |= {ep.mic_source(take, p)[0] for p in t["mics"]}
     for f in files:
         if not f.exists():
             raise SystemExit(f"Take {take}: {f.relative_to(ep.dir)} is missing. Check the file name in episode.json.")

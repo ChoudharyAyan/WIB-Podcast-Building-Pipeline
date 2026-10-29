@@ -95,10 +95,30 @@ class Episode:
     def take_ids(self) -> list[str]:
         return list(self.takes)
 
+    def mic_source(self, take: str, person: str) -> tuple[Path, str | None]:
+        """(raw file, channel) for a person's mic. "file.mp4#left" / "#right" means one channel of a
+        stereo recording, e.g. a dual wireless receiver with one transmitter per channel."""
+        name, _, ch = self.takes[take]["mics"][person].partition("#")
+        if ch and ch not in ("left", "right"):
+            raise SystemExit(f'Mic "{name}#{ch}" for {person}: the channel must be #left or #right.')
+        return self.raw / name, ch or None
+
     def file(self, take: str, role: str) -> Path | None:
-        """role: screen, camera, or mic:<person>."""
+        """role: screen, camera, or mic:<person>. A one-channel mic is split once to edit/audio/split/."""
         t = self.takes[take]
-        name = t["mics"].get(role[4:]) if role.startswith("mic:") else t.get(role)
+        if role.startswith("mic:"):
+            src, ch = self.mic_source(take, role[4:])
+            if not ch:
+                return src
+            out = self.edit / "audio" / "split" / f"{src.stem}-{ch}.wav"
+            if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
+                from . import ff
+                out.parent.mkdir(parents=True, exist_ok=True)
+                tmp = out.with_suffix(".part.wav")
+                ff.run(["-i", src, "-vn", "-af", f"pan=mono|c0=c{0 if ch == 'left' else 1}", "-ar", 48000, "-c:a", "pcm_s16le", tmp])
+                tmp.rename(out)
+            return out
+        name = t.get(role)
         return self.raw / name if name else None
 
     def reference_file(self, take: str) -> Path:
@@ -111,7 +131,7 @@ class Episode:
 
     def offset(self, take: str, role: str) -> float:
         """Seconds to add to a reference-clock time to get the same moment in that file."""
-        f = self.file(take, role)
+        f = self.mic_source(take, role[4:])[0] if role.startswith("mic:") else self.file(take, role)
         if f is None or f == self.reference_file(take):
             return 0.0
         try:

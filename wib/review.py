@@ -15,7 +15,7 @@ def run(episode_id: str) -> str:
         ref = ep.reference_file(take)
         lines.append(f"## {take}: {ref.name}, {ff.duration(ref) / 60:.1f} min")
         for p, name in ep.takes[take]["mics"].items():
-            f = ep.raw / name
+            f = ep.file(take, f"mic:{p}")
             loud = ff.loudness(f)
             lines.append(f"- {ep.people.get(p, {}).get('name', p)} mic ({name}): {loud['lufs']} LUFS, peak {loud['true_peak']} dBFS"
                          + ("  ← clipping, ask for a re-record of this part if it is a key moment" if (loud["true_peak"] or -99) > -0.5 else ""))

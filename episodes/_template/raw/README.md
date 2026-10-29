@@ -9,5 +9,7 @@ Same room, two people (Ep02 setup, full guide in WORKFLOW.md stage 1)
 - `<take>-screen.mp4`: OBS screen + Ayan's mic. Reference clock.
 - `<take>-camera.mp4`: the Pixel on a tripod, 4K 30 fps, both of you in frame, recorded on the phone.
 - `<take>-yash.m4a`: Yash's own mic (phone voice recorder or lav), 48 kHz if it lets you pick.
+  With a dual wireless receiver in stereo, there is no separate file: set the mics to
+  `"t1-screen.mp4#left"` (Ayan) and `"t1-screen.mp4#right"` (Yash) in episode.json.
 
 At the start of every take: everything recording, then ONE loud clap in view of the camera.

@@ -261,3 +261,55 @@ def test_11_cli_new(tmp_path, monkeypatch):
     cli.main(["new", "wib-005", "--number", "05"])
     data = json.loads((tmp_path / "wib-005" / "episode.json").read_text())
     assert data["id"] == "wib-005" and data["number"] == "05" and data["format"] == "conversation"
+
+
+def test_13_shared_voice_track_and_second_screen(ep_id):
+    """One wireless receiver mixing both mics (the sound), a phone near Yash only to tell who talks,
+    and Yash's own screen recording as a second screen."""
+    import shutil
+    from wib import cutlist, ingest, output, speakers, transcribe
+    src = Path(wib.EPISODES) / ep_id
+    d = Path(wib.EPISODES) / "wib-097"
+    raw = d / "raw"
+    raw.mkdir(parents=True)
+    H, Y, C = voice(11, HOST), voice(23, YASH), clap()
+    cut = lambda t0, dur: slice(int((t0 - G0) * RATE), int((t0 - G0) * RATE) + int(dur * RATE))
+    ff.write_wav(raw / "mix.wav", (H + Y + C)[cut(0, DUR)], RATE)
+    ff.write_wav(raw / "t1-yash-phone.wav", (0.35 * H + Y + C)[cut(-YASH_OFF, DUR + YASH_OFF + 2)], RATE)
+    ff.write_wav(raw / "s2.wav", (0.3 * (H + Y) + C)[cut(-1.0, DUR + 3)], RATE)
+    ffmpeg("-f", "lavfi", "-i", f"testsrc2=s=1280x800:r=30:d={DUR}", "-i", raw / "mix.wav", "-map", "0:v", "-map", "1:a",
+           "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "aac", "-shortest", raw / "t1-screen.mp4")
+    ffmpeg("-f", "lavfi", "-i", f"mandelbrot=s=1280x800:r=30", "-i", raw / "s2.wav", "-map", "0:v", "-map", "1:a", "-t", DUR + 3,
+           "-c:v", "libx264", "-preset", "ultrafast", "-c:a", "aac", raw / "t1-yash-screen.mp4")
+    for f in ("mix.wav", "s2.wav"):
+        (raw / f).unlink()
+    shutil.copy(src / "raw" / "t1-camera.mp4", raw / "t1-camera.mp4")
+    shutil.copytree(src / "music", d / "music")
+    shutil.copytree(src / "edit" / "assets", d / "edit" / "assets")
+    data = json.loads((src / "episode.json").read_text())
+    data.update({"id": "wib-097", "delivery_root": str(d / "delivery")})
+    data["takes"] = [{"id": "t1", "screen": "t1-screen.mp4", "screen2": "t1-yash-screen.mp4", "camera": "t1-camera.mp4",
+                      "voice": "t1-screen.mp4", "mics": {"yash": "t1-yash-phone.wav"}}]
+    (d / "episode.json").write_text(json.dumps(data))
+
+    res = ingest.run("wib-097")["t1"]["offsets"]
+    assert res["t1-yash-phone.wav"] == pytest.approx(YASH_OFF, abs=0.01)
+    assert res["t1-yash-screen.mp4"] == pytest.approx(1.0, abs=0.01)
+    ep = episode("wib-097")
+    assert ep.take_people("t1") == ["host", "yash"]
+    speakers._envelopes.cache_clear()
+    assert speakers.owner_at(ep, "t1", 4, 6) == "host"
+    assert speakers.owner_at(ep, "t1", 12, 14) == "yash"
+    assert speakers.owner_at(ep, "t1", 9.4, 9.8) is None
+    tr = transcribe.label_shared(ep, "t1", fake_whisper(HOST + YASH, 0.0, "w"))
+    words = [w for s in tr["segments"] for w in s["words"]]
+    wrong = [w for w in words if w["speaker"] != ("host" if any(a <= (w["start"] + w["end"]) / 2 < b for a, b in HOST) else "yash")]
+    assert len(wrong) <= 0.05 * len(words), wrong
+    ep.write("transcripts/t1.json", tr)
+    ep.write("cuts.json", {"takes": {"t1": {"start": 1.9, "end": None, "tail": 0.5, "section": "intro"}},
+                           "layouts": [{"take": "t1", "from": 11.0, "to": 16.0, "layout": "screen2"}]})
+    segs = cutlist.run("wib-097")["segments"]
+    assert any(s["layout"] == "screen2" for s in segs)
+    out = Path(output.run("wib-097", "output1", test=14.0)["file"])
+    assert ff.duration(out) == pytest.approx(20.0, abs=0.15)
+    assert not ff.decode_errors(out)

@@ -77,6 +77,34 @@ def to_markdown(ep: Episode, transcript: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+def turns(words: list[dict], take: str) -> dict:
+    """Speaker-turn segments: a new segment at every speaker change or pause over 1 s."""
+    segments = []
+    for w in sorted(words, key=lambda w: w["start"]):
+        cur = segments[-1] if segments else None
+        if cur and cur["speaker"] == w["speaker"] and w["start"] - cur["end"] < 1.0:
+            cur["words"].append(w); cur["end"] = w["end"]
+        else:
+            segments.append({"start": w["start"], "end": w["end"], "speaker": w["speaker"], "words": [w]})
+    for s in segments:
+        s["text"] = " ".join(x["word"] for x in s["words"])
+    return {"language": "en", "take": take, "segments": segments}
+
+
+def label_shared(ep: Episode, take: str, tr: dict) -> dict:
+    """Words from the shared voice track (its own clock), moved to the reference clock and labelled
+    with whoever is talking at that moment (the previous speaker when it's unclear)."""
+    from . import speakers
+    off, words, last = ep.offset(take, "voice"), [], ep.host
+    for s in tr["segments"]:
+        for w in s["words"]:
+            a, b = w["start"] - off, w["end"] - off
+            who = speakers.owner_at(ep, take, a, b)
+            last = who if who in ep.people else last
+            words.append({"start": round(a, 3), "end": round(b, 3), "word": w["word"], "speaker": last})
+    return turns(words, take)
+
+
 def merge(ep: Episode, take: str, per_person: dict[str, dict]) -> dict:
     """Shift each mic's words into the reference clock, keep only words that mic owns, and rebuild
     segments as speaker turns (a new segment at every speaker change or pause over 1 s)."""
@@ -90,17 +118,7 @@ def merge(ep: Episode, take: str, per_person: dict[str, dict]) -> dict:
                 if len(per_person) > 1 and not speakers.word_is_own(ep, take, person, a, b):
                     continue
                 words.append({"start": round(a, 3), "end": round(b, 3), "word": w["word"], "speaker": person})
-    words.sort(key=lambda w: w["start"])
-    segments = []
-    for w in words:
-        cur = segments[-1] if segments else None
-        if cur and cur["speaker"] == w["speaker"] and w["start"] - cur["end"] < 1.0:
-            cur["words"].append(w); cur["end"] = w["end"]
-        else:
-            segments.append({"start": w["start"], "end": w["end"], "speaker": w["speaker"], "words": [w]})
-    for s in segments:
-        s["text"] = " ".join(x["word"] for x in s["words"])
-    return {"language": "en", "take": take, "segments": segments}
+    return turns(words, take)
 
 
 def run(episode_id: str, only: str | None = None) -> list[Path]:
@@ -110,13 +128,15 @@ def run(episode_id: str, only: str | None = None) -> list[Path]:
     for take in ep.take_ids():
         if only and take != only:
             continue
-        per_person = {}
-        for person in ep.takes[take]["mics"]:
-            src = ep.file(take, f"mic:{person}")
-            wav = ff.extract_audio(src, ep.edit / "audio" / f"{take}-{person}.wav", rate=16000)
-            per_person[person] = transcribe_file(wav, prompt)
-        tr = merge(ep, take, per_person)
+        if ep.takes[take].get("voice"):  # one shared track: transcribe it once, label words by who is talking
+            wav = ff.extract_audio(ep.file(take, "voice"), ep.edit / "audio" / f"{take}-voice.wav", rate=16000)
+            tr = label_shared(ep, take, transcribe_file(wav, prompt))
+        else:
+            tr = merge(ep, take, {p: transcribe_file(ff.extract_audio(ep.file(take, f"mic:{p}"),
+                                                                        ep.edit / "audio" / f"{take}-{p}.wav", rate=16000), prompt)
+                                  for p in ep.takes[take]["mics"]})
         path = ep.write(f"transcripts/{take}.json", tr)
+
         (ep.edit / "transcripts" / f"{take}.md").write_text(to_markdown(ep, tr))
         print(f"{take}: {sum(len(s['words']) for s in tr['segments'])} words, {len(tr['segments'])} turns -> {path}")
         out.append(path)

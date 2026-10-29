@@ -8,6 +8,8 @@ Shot layouts:
   screen          the screen recording framed on the WIB canvas (solo: OBS bubble baked in;
                   conversation: the active speaker's face added as a bubble)
   screen-only     the framed screen with no bubble
+  screen2         a second screen recording of the take (e.g. the guest's own Mac), framed the same
+                  way with the speaker bubble; screen2-only without it
   wide            the camera's wide shot
   close:<person>  a close-up crop of one person from the camera
   auto            (conversation, in the cut list) wide and close-ups switched by who is talking
@@ -67,10 +69,10 @@ def _speaker_runs(ep: Episode, take: str, a: float, b: float) -> list[list]:
 def conversation_shots(ep: Episode, take: str, a: float, b: float, layout: str, opens_section: bool) -> list[tuple[float, float, str, str | None]]:
     """[(start, end, layout, person)] for one cut-list segment."""
     closes = ep.get("framing", {}).get("close", {})
-    if layout in ("screen", "screen-only"):
-        if layout == "screen-only":
-            return [(a, b, "screen-only", None)]
-        return [(x, y, "screen", p or ep.host) for x, y, p in _speaker_runs(ep, take, a, b)]
+    if layout in ("screen", "screen-only", "screen2", "screen2-only"):
+        if layout.endswith("-only"):
+            return [(a, b, layout, None)]
+        return [(x, y, layout, p if p in ep.people else ep.host) for x, y, p in _speaker_runs(ep, take, a, b)]
     if layout != "auto":
         p = layout.split(":", 1)[1] if layout.startswith("close:") else None
         return [(a, b, layout, p)]
@@ -191,7 +193,7 @@ def export_otio(ep: Episode, path) -> None:
     import opentimelineio as otio
     fps = ep.fps
     tl = otio.schema.Timeline(name=f"{ep.tag} Output1")
-    roles = [r for r in ("screen", "camera") if any(ep.file(t, r) for t in ep.take_ids())]
+    roles = [r for r in ("screen", "screen2", "camera") if any(ep.file(t, r) for t in ep.take_ids())]
     tracks = {r: otio.schema.Track(name=r, kind=otio.schema.TrackKind.Video) for r in roles}
     audio = otio.schema.Track(name="A1", kind=otio.schema.TrackKind.Audio)
     for _sid, segs in sections(ep):

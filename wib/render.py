@@ -106,19 +106,22 @@ def shot_stream(g: Graph, ep: Episode, sh: Shot, a: int, n: int) -> str:
             i = g.input(path, ("-loop", "1", "-framerate", str(fps), "-t", f"{dur:.3f}"))
             sw, shh = ff.video_size(path)
         else:
-            path = ep.file(sh.take, "screen")
-            i = g.input(path, ("-ss", f"{t + ep.offset(sh.take, 'screen'):.4f}", "-t", f"{dur:.3f}", "-an"))
+            role = "screen2" if lay.startswith("screen2") else "screen"
+            path = ep.file(sh.take, role)
+            if path is None:
+                raise SystemExit(f'Layout {lay} needs "{role}" in take {sh.take} of episode.json.')
+            i = g.input(path, ("-ss", f"{t + ep.offset(sh.take, role):.4f}", "-t", f"{dur:.3f}", "-an"))
             sw, shh = ff.video_size(path)
         cw, ch, X, Y = screen_box(ep, sw, shh)
         src = g.label()
         g.add(f"[{i}:v]setpts=PTS-STARTPTS,fps={fps},trim=end_frame={n},format=yuv420p[{src}]")
-        baked = lay.startswith("screen") and not ep.conversation  # OBS bubble is in the picture
+        baked = lay in ("screen", "screen-only") and not ep.conversation  # OBS bubble is in the picture
         if sh.zoom:
             src = zoom_stream(g, ep, src, sh.zoom, a / fps, sw, shh, baked)
         framed = g.label()
         g.add(f"[{src}]scale={cw}:{ch}:flags=lanczos,pad={W}:{H}:{X}:{Y}:color=0x{INK_HEX},setsar=1[{framed}]")
         cur = framed
-        if lay == "screen" and ep.conversation:
+        if lay in ("screen", "screen2") and ep.conversation:
             cur = bubble_overlay(g, ep, cur, sh, t, n, X, Y, ch)
         foot_y = Y + ch + (H - (Y + ch)) // 2
         cur = wordmark_overlay(g, ep, cur, X + cw, foot_y)

@@ -22,7 +22,7 @@ def run(episode_id: str) -> str:
         tr = ep.read(f"transcripts/{take}.json", required=False)
         if tr:
             ws = ep.words(take)
-            for p in ep.takes[take]["mics"]:
+            for p in ep.take_people(take):
                 mine = [w for w in ws if w["speaker"] == p]
                 talk = sum(w["end"] - w["start"] for w in mine)
                 if talk > 10:
@@ -30,9 +30,9 @@ def run(episode_id: str) -> str:
                                  f"(target 140-160), {talk / 60:.1f} min of speech")
         if ep.conversation and ep.sync.get(take):
             runs = speakers.activity(ep, take, 0.0, ff.duration(ref))
-            share = {p: 0.0 for p in ep.takes[take]["mics"]}
+            share = {p: 0.0 for p in ep.take_people(take)}
             for a, b, p in runs:
-                if p:
+                if p in share:
                     share[p] += b - a
             tot = sum(share.values()) or 1.0
             share = {p: v / tot for p, v in share.items()}

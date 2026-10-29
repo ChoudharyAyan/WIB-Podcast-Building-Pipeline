@@ -123,7 +123,7 @@ Start from `episodes/_template/episode.conversation.json` or `episode.solo.json`
 | `id`, `number`, `title` | `wib-002`, `"02"`, the episode title in sentence case |
 | `format` | `solo` or `conversation` |
 | `people` | `{"host": {"name", "role": "Host", "colour"}, "yash": {...}}`. Colours: `volt`, `signal`, `violet`, `teal`, `amber`. The host is the person with role Host. |
-| `takes` | In episode order. `{"id", "screen", "camera", "mics": {"host": file, "yash": file}, "reference"}`. Solo takes need only `screen`. A mic may be the screen file itself (Ayan's mic is inside the OBS recording). |
+| `takes` | In episode order. `{"id", "screen", "camera", "mics": {"host": file, "yash": file}, "reference"}`. Solo takes need only `screen`. A mic may be the screen file itself (Ayan's mic is inside the OBS recording). Optional `"voice"`: one file that carries everyone's sound (a wireless receiver that mixes both mics into one track); then `mics` lists a detection mic (a phone recording near that person) for everyone except one person, used only to tell who is talking. Optional `"screen2"`: a second screen recording (the guest's own Mac), used by the `screen2` layout. |
 | `framing` | Conversation only. `face.<person> = [cx, cy, size]` (a square around the face) and `close.<person> = [x, y, w, h]` (a 16:9 close-up), in camera pixels. Optional `wide = [x, y, w, h]`. Set with `wib frame`. |
 | `bubble` | Solo only: where the OBS bubble sits in the screen recording (Ep01: x 56, y 1104, 440 px; face crop 91, 1112, 370). |
 | `names`, `glossary` | Transcript spelling fixes and extra Whisper hints. |
@@ -205,7 +205,8 @@ Gate: every board frame passes the style rules; every chapter has a question and
 | **Camera** | The Pixel on a tripod about 2 m away at eye height, both people in frame, sitting slightly angled toward each other. Rear camera, **4K 30 fps, recorded on the phone** (not as a webcam: webcam mode is 1080p and softer). Do Not Disturb on, charger plugged in, at least 30 GB free (4K is about 20 GB an hour). Lock exposure and focus (long-press on the frame). |
 | **Framing** | Leave space above heads. Each face should be at least 500 px tall in the 4K frame so close-ups and reel faces stay sharp. The pipeline crops close-ups and reel faces from this one shot. |
 | **Ayan's mic** | Into OBS as before (the OBS file is the sync reference and carries his voice). |
-| **Yash's mic** | His own: a second pair of earbuds or a lav into his phone's voice recorder (or a free app that records WAV at 48 kHz). Phone face-down near him, not between you. |
+| **Mics** | A wireless clip-on for each person. **Separate tracks** (two receivers, or one receiver in stereo): each person's track is their mic. **One receiver that mixes both into one mono track** (Ep02's kit: macOS shows it as "1 in"): that track is the sound (`"voice"`), and Yash also records **Voice Memos** on his phone, face-down near him, only to tell who is talking (`"mics": {"yash": "t1-yash-phone.m4a"}`). In OBS keep "Enable Downmixing" ticked for a mono receiver and mute the webcam's own mic. |
+| **Guest's screen** | To show things on Yash's Mac: turn on **AirPlay Receiver** on Ayan's Mac (System Settings → General → AirDrop & Handoff), then on Yash's Mac Control Centre → Screen Mirroring → Ayan's Mac. OBS records it as part of Ayan's screen. Backup: Yash records his own screen in QuickTime with his mic on (it hears the clap) and it goes in as `"screen2"`. Do Not Disturb on both Macs. |
 | **Screen** | OBS records the screen as usual, **without the webcam bubble** (the edit adds the speaker's face). If nothing will be shown on screen, OBS still records: it carries Ayan's mic. |
 | **Light** | Both faces lit from the front. No window behind either person. |
 | **Room** | Soft room if possible (curtains, a bed, a sofa). Fans and AC off. Phones on silent. |
@@ -289,7 +290,7 @@ Conversation extras
 6. **Chapters**: split the conversation into the `sections` from `episode.json` at the question that opens each one. Rename or add sections to match what was actually discussed. Each card `line` must be something said in the episode.
 7. **Tighten**: `max_pause 1.2, keep 0.5` shortens silent pauses where both mics are quiet. Laughs and reactions are never cut because a mic is active.
 8. **Crosstalk**: don't cut inside overlapping speech. Remove a whole exchange only if it adds nothing.
-9. **Layouts**: default `auto` (camera switching). Set `screen` for stretches where the screen is what matters (a demo, a diagram); the active speaker's face shows as a bubble. `screen-only` for no bubble, `wide` or `close:<person>` to force a shot.
+9. **Layouts**: default `auto` (camera switching). Set `screen` for stretches where the screen is what matters (a demo, a diagram); the active speaker's face shows as a bubble. `screen2` does the same with the take's second screen recording. `screen-only` / `screen2-only` for no bubble, `wide` or `close:<person>` to force a shot.
 
 How camera switching works (`auto`)
 - Speaker activity comes from the two mics. Runs shorter than 2 s join their neighbour.

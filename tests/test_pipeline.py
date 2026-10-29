@@ -261,3 +261,28 @@ def test_11_cli_new(tmp_path, monkeypatch):
     cli.main(["new", "wib-005", "--number", "05"])
     data = json.loads((tmp_path / "wib-005" / "episode.json").read_text())
     assert data["id"] == "wib-005" and data["number"] == "05" and data["format"] == "conversation"
+
+
+def test_12_dual_receiver_stereo_channels(ep_id):
+    """One wireless receiver for both mics: Ayan on the left channel, Yash on the right, in one file."""
+    from wib import ingest, speakers
+    src = Path(wib.EPISODES) / ep_id
+    d = Path(wib.EPISODES) / "wib-098"
+    (d / "raw").mkdir(parents=True)
+    raw = src / "raw"
+    ffmpeg("-i", raw / "t1-screen.mp4", "-ss", YASH_OFF, "-i", raw / "t1-yash.wav", "-filter_complex",
+           "[0:a]aformat=channel_layouts=mono[l];[1:a]aformat=channel_layouts=mono[r];[l][r]join=inputs=2:channel_layout=stereo[a]",
+           "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-shortest", d / "raw" / "t1-screen.mp4")
+    ffmpeg("-i", raw / "t1-camera.mp4", "-c", "copy", d / "raw" / "t1-camera.mp4")
+    data = json.loads((src / "episode.json").read_text())
+    data["id"] = "wib-098"
+    data["takes"][0]["mics"] = {"host": "t1-screen.mp4#left", "yash": "t1-screen.mp4#right"}
+    (d / "episode.json").write_text(json.dumps(data))
+    res = ingest.run("wib-098")["t1"]
+    assert res["offsets"]["t1-camera.mp4"] == pytest.approx(CAM_OFF, abs=0.01)
+    ep = episode("wib-098")
+    assert ep.file("t1", "mic:yash").name == "t1-screen-right.wav"
+    assert ep.offset("t1", "mic:yash") == 0.0
+    speakers._envelopes.cache_clear()
+    assert speakers.owner_at(ep, "t1", 4, 6) == "host"
+    assert speakers.owner_at(ep, "t1", 12, 14) == "yash"

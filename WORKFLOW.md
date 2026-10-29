@@ -123,7 +123,7 @@ Start from `episodes/_template/episode.conversation.json` or `episode.solo.json`
 | `id`, `number`, `title` | `wib-002`, `"02"`, the episode title in sentence case |
 | `format` | `solo` or `conversation` |
 | `people` | `{"host": {"name", "role": "Host", "colour"}, "yash": {...}}`. Colours: `volt`, `signal`, `violet`, `teal`, `amber`. The host is the person with role Host. |
-| `takes` | In episode order. `{"id", "screen", "camera", "mics": {"host": file, "yash": file}, "reference"}`. Solo takes need only `screen`. A mic may be the screen file itself (Ayan's mic is inside the OBS recording). |
+| `takes` | In episode order. `{"id", "screen", "camera", "mics": {"host": file, "yash": file}, "reference"}`. Solo takes need only `screen`. A mic may be the screen file itself (Ayan's mic is inside the OBS recording). With one wireless receiver for both mics recorded in stereo, use one channel each: `"host": "t1-screen.mp4#left", "yash": "t1-screen.mp4#right"`. |
 | `framing` | Conversation only. `face.<person> = [cx, cy, size]` (a square around the face) and `close.<person> = [x, y, w, h]` (a 16:9 close-up), in camera pixels. Optional `wide = [x, y, w, h]`. Set with `wib frame`. |
 | `bubble` | Solo only: where the OBS bubble sits in the screen recording (Ep01: x 56, y 1104, 440 px; face crop 91, 1112, 370). |
 | `names`, `glossary` | Transcript spelling fixes and extra Whisper hints. |
@@ -205,7 +205,7 @@ Gate: every board frame passes the style rules; every chapter has a question and
 | **Camera** | The Pixel on a tripod about 2 m away at eye height, both people in frame, sitting slightly angled toward each other. Rear camera, **4K 30 fps, recorded on the phone** (not as a webcam: webcam mode is 1080p and softer). Do Not Disturb on, charger plugged in, at least 30 GB free (4K is about 20 GB an hour). Lock exposure and focus (long-press on the frame). |
 | **Framing** | Leave space above heads. Each face should be at least 500 px tall in the 4K frame so close-ups and reel faces stay sharp. The pipeline crops close-ups and reel faces from this one shot. |
 | **Ayan's mic** | Into OBS as before (the OBS file is the sync reference and carries his voice). |
-| **Yash's mic** | His own: a second pair of earbuds or a lav into his phone's voice recorder (or a free app that records WAV at 48 kHz). Phone face-down near him, not between you. |
+| **Yash's mic** | His own clip-on mic. With a dual wireless kit (one USB-C receiver, two transmitters), plug the receiver into the Mac as the OBS mic, set it to stereo (Audio MIDI Setup: 2 ch, 48 kHz; OBS Advanced Audio Properties: Mono off), and check each transmitter moves only one meter bar. Then both voices are in the OBS file, one per channel. Otherwise, a lav into his phone's voice recorder at 48 kHz. |
 | **Screen** | OBS records the screen as usual, **without the webcam bubble** (the edit adds the speaker's face). If nothing will be shown on screen, OBS still records: it carries Ayan's mic. |
 | **Light** | Both faces lit from the front. No window behind either person. |
 | **Room** | Soft room if possible (curtains, a bed, a sofa). Fans and AC off. Phones on silent. |

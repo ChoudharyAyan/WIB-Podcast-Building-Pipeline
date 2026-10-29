@@ -27,7 +27,7 @@ edit/reels.json:
   }]}]}
 
 "at": null means "the screen at the moment the words are said"; a time cuts to another moment
-(the live demo). "src" may be "screen", "camera" or "image:<path>".
+(the live demo). "src" may be "screen", "screen2" (a second screen recording), "camera" or "image:<path>".
 """
 
 import math
@@ -260,7 +260,7 @@ class Reel:
         if src.startswith("image:"):
             path = ep.asset(src.split(":", 1)[1])
             return path, 0.0, f"scale={CW * 2}:{CH * 2}:force_original_aspect_ratio=increase,crop={CW * 2}:{CH * 2},{z}", True
-        role = "camera" if src == "camera" else "screen"
+        role = src if src in ("camera", "screen2") else "screen"
         path = ep.file(c["take"], role)
         sw, sh = ff.video_size(path)
         w = min(seg.get("w", sw), sw)
@@ -274,7 +274,7 @@ class Reel:
                 x0 = b["x"] + b["size"]
             else:
                 y0 = max(0, b["y"] - h)
-        blur = self._privacy(c["take"], start, d) if role == "screen" else ""
+        blur = self._privacy(c["take"] if role == "screen" else f"{c['take']}-screen2", start, d) if role != "camera" else ""
         grade = f",{ep['camera_grade']}" if role == "camera" else ""
         vf = f"{blur}crop={int(w)}:{int(h)}:{int(x0)}:{int(y0)}{grade},scale={CW * 2}:{CH * 2}:flags=lanczos,{z}"
         return path, start + ep.offset(c["take"], role), vf, False

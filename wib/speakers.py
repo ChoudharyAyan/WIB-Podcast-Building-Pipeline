@@ -3,6 +3,12 @@ bleed one mic picks up from the other person), to switch cameras, and to auto-mi
 
 Envelopes are in the take's reference clock, one value per HOP seconds, in dB relative to that
 mic's own speech level (its 95th percentile), so a hot mic and a quiet mic compare fairly.
+
+Shared voice track (one wireless receiver mixing everyone): the take's "voice" file says when anyone
+is talking, and each detection mic (a phone near that person) says whether it is them: a detection
+mic that is close to the voice track's level is its owner speaking; well below it, someone else.
+The split point is found per take from the data (two clusters), so phone placement doesn't need
+tuning. The result is turned into ordinary per-person envelopes, so everything downstream is unchanged.
 """
 
 from functools import lru_cache
@@ -29,21 +35,48 @@ def mic_track(ep: Episode, take: str, person: str, rate: int, start: float = 0.0
     return ff.read_audio(ep.file(take, f"mic:{person}"), start + off, dur, rate)
 
 
+def _level(x: np.ndarray, n: int) -> np.ndarray:
+    hop = int(RATE * HOP)
+    x = np.pad(x[: n * hop], (0, max(0, n * hop - len(x))))
+    db = 20 * np.log10(np.sqrt(np.mean(x.reshape(n, hop) ** 2, axis=1) + 1e-12))
+    db = np.convolve(db, np.ones(5) / 5, mode="same")  # 100 ms smoothing
+    return db - np.percentile(db, 95)
+
+
+def _split(v: np.ndarray) -> float:
+    """Threshold between the two clusters of a 1-D sample (2-means)."""
+    lo, hi = np.percentile(v, 10), np.percentile(v, 90)
+    for _ in range(50):
+        t = (lo + hi) / 2
+        a, b = v[v < t], v[v >= t]
+        if not len(a) or not len(b):
+            break
+        lo, hi = a.mean(), b.mean()
+    return float((lo + hi) / 2)
+
+
 @lru_cache(maxsize=8)
 def _envelopes(episode_id: str, take: str) -> tuple[list[str], np.ndarray]:
     ep = Episode(episode_id)
-    people = list(ep.takes[take]["mics"])
+    people = ep.take_people(take)
     n = int(_duration(ep, take) / HOP)
-    hop = int(RATE * HOP)
-    rows = []
-    for p in people:
-        x = mic_track(ep, take, p, RATE)[: n * hop]
-        x = np.pad(x, (0, n * hop - len(x)))
-        rms = np.sqrt(np.mean(x.reshape(n, hop) ** 2, axis=1) + 1e-12)
-        db = 20 * np.log10(rms)
-        db = np.convolve(db, np.ones(5) / 5, mode="same")  # 100 ms smoothing
-        rows.append(db - np.percentile(db, 95))
-    return people, np.array(rows)
+    if not ep.takes[take].get("voice"):
+        return people, np.array([_level(mic_track(ep, take, p, RATE), n) for p in people])
+    v = _level(ff.read_audio(ep.file(take, "voice"), ep.offset(take, "voice"), n * HOP, RATE), n)
+    speech = v > SILENT
+    detect = [p for p in people if p in ep.takes[take]["mics"]]
+    owner = np.full(n, -1)
+    for p in detect:
+        d = _level(mic_track(ep, take, p, RATE), n) - v
+        t = _split(d[speech]) if speech.sum() > 50 else 0.0
+        owner[speech & (d >= t) & (owner == -1)] = people.index(p)
+    rest = next(p for p in people if p not in detect)
+    owner[speech & (owner == -1)] = people.index(rest)
+    rows = np.full((len(people), n), -60.0)
+    for k in range(len(people)):
+        rows[k, owner == k] = v[owner == k]
+    rows[:, ~speech] = np.minimum(rows[:, ~speech], v[~speech])
+    return people, rows
 
 
 def envelopes(ep: Episode, take: str) -> tuple[list[str], np.ndarray]:

@@ -37,7 +37,7 @@ def sync_take(ep: Episode, take: str) -> dict:
     t = ep.takes[take]
     ref = ep.reference_file(take)
     files = {ref}
-    for role in ("screen", "camera"):
+    for role in ("screen", "screen2", "camera", "voice"):
         if ep.file(take, role):
             files.add(ep.file(take, role))
     files |= {ep.raw / m for m in t["mics"].values()}

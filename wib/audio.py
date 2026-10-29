@@ -40,8 +40,10 @@ def fade(x: np.ndarray, fin: float, fout: float) -> np.ndarray:
 
 def segment_voice(ep: Episode, take: str, a: float, b: float) -> np.ndarray:
     """One kept range of a take, all mics, automixed when there is more than one."""
-    people = list(ep.takes[take]["mics"])
     n = int(round((b - a) * RATE))
+    if ep.takes[take].get("voice"):  # one shared track already carries everyone
+        return ff.read_audio(ep.file(take, "voice"), a + ep.offset(take, "voice"), n / RATE, RATE)
+    people = list(ep.takes[take]["mics"])
     if len(people) == 1:
         p = people[0]
         return ff.read_audio(ep.file(take, f"mic:{p}"), a + ep.offset(take, f"mic:{p}"), n / RATE, RATE)

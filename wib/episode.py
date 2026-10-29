@@ -92,6 +92,18 @@ class Episode:
             out[t["id"]] = t
         return out
 
+    def take_people(self, take: str) -> list[str]:
+        """Everyone heard in a take: each person with a mic, plus, when the take has a shared "voice"
+        track, the one person without a mic of their own."""
+        t = self.takes[take]
+        if not t.get("voice"):
+            return list(t["mics"])
+        rest = [p for p in self.people if p not in t["mics"]]
+        if len(rest) != 1:
+            raise SystemExit(f'Take {take} has a "voice" track: give every person but one a detection mic under "mics" '
+                             f"(people without one: {', '.join(rest) or 'none'}).")
+        return [p for p in self.people if p in t["mics"] or p in rest]
+
     def take_ids(self) -> list[str]:
         return list(self.takes)
 

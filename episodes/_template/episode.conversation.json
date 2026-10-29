@@ -9,7 +9,7 @@
  },
  "takes": [
   {"id": "t1", "screen": "t1-screen.mp4", "camera": "t1-camera.mp4",
-   "mics": {"host": "t1-screen.mp4", "yash": "t1-yash.m4a"}}
+   "voice": "t1-screen.mp4", "mics": {"yash": "t1-yash-phone.m4a"}}
  ],
  "framing": {
   "face": {"host": [1100, 820, 760], "yash": [2740, 820, 760]},
